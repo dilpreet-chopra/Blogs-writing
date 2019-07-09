@@ -1,0 +1,27 @@
+
+<html>
+	<head>
+		
+	</head>
+	<body>
+		
+			<div class="row footer-row">
+				<div class ="col-lg-12">
+				{% for entry in data %}
+				{% for year_key,value in entry.items %}<br>
+					{{ year_key }}
+				{% for month_key,counter_value in value.items %}
+				<br>	
+					{{ month_key }} {{ counter_value }}
+				{% endfor %}
+				{% endfor %}
+				{% endfor %}
+					
+					
+						
+				</div>
+			</div>	
+
+	
+	</body>
+</html>

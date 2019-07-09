@@ -1,0 +1,438 @@
+{% load static %}
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="{% static 'blogs.css' %}">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+		<!-- jQuery library -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+		<!-- Popper JS -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js">
+		</script>
+
+		<!-- Latest compiled JavaScript -->
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+		<!-- font-awsome icons -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+		
+		
+	</head>
+	<script>
+		var x=1
+		
+function appendRow(dynamic_id)
+{
+
+   var d = document.getElementById(dynamic_id);
+   d.innerHTML += "<textarea id='tst"+ x++ +"'rows=2 cols=50 name=comment placeholder='Write a reply...'></textarea><br >";
+   d.innerHTML += "<button type=submit id='tst"+ x++ +"'>Submit</button><br >";
+   
+}
+</script>
+
+
+	<body>
+		
+		<div class="container">
+			{% include "header.html" %}
+
+			{% if blogs %}
+			{% for b in blogs %}
+			
+			<div class="row content-row">
+					
+						<div class ="col-lg-4 created-col">
+							{{ b.created_at }}
+						</div>
+						<div class ="col-lg-6">
+							<a href="/blog_description/?id={{ b.Id }}" style="color:#0F72B0;">{{ b.title }}</a>—<span style="color: black;">{{ b.subtitle }}</span>
+						</div>
+						<div class ="col-lg-1">
+							<i class="fa fa-heart" style="font-size:20px;color:#F73C50; margin-left: -8px;"></i>&nbsp;&nbsp;<span style="font-size: 16px;">{{b.likes}}</span>	
+						</div>
+
+					
+			</div>
+				{% endfor %}
+			<div class="pagination">
+				<span class="step-links">
+				{% if blogs.has_previous %}
+					<a href="?page={{ blogs.previous_page_number }}"> << &nbsp;previous </a>
+				 {% endif %}
+
+				 <span class="current">&nbsp;&nbsp;
+				Page {{ blogs.number }} &nbsp;&nbsp;of &nbsp;&nbsp; {{ blogs.paginator.num_pages }}&nbsp;&nbsp;
+				 </span>
+
+				{% if blogs.has_next %}
+					<a href="?page={{ blogs.next_page_number }}"> next &nbsp;>> </a>
+				{% endif %}
+				 </span>
+			</div>	
+			{% endif %}
+
+			{% if blog_desc %}
+	
+			<div class="row blog-title-row row-margin">
+				<div class="col-lg-12">
+				{{ blog_desc.title }}
+				</div>
+			</div>
+
+			<div class="row blog-date-row row-margin">
+				<div class="col-lg-12">
+				written on {{ blog_desc.created_at }}
+				</div>
+			</div>
+
+			<div class="row blog-title-row row-margin">
+				<div class="col-lg-12">
+					<button id="like"><i class="fa fa-thumbs-up" style="font-size:32px;color:#3791C0;"></i></button>
+					<input type="hidden" id="blog_id" value="{{blog_desc.Id}}"/>
+				</div>
+			</div>
+				
+			<div class="row blog-desc-row row-margin">
+			<!-- <p>{{ blog_desc.description|safe }}</p> -->
+				<div class="col-lg-12">
+					<i style="font-style: normal;">{{ blog_desc.description|safe }}</i>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-lg-7 comment-col">
+			<!-- input-for fresh comment with no parent id -->
+					<form action="{% url 'comment-save'%}" method="POST">
+						{% csrf_token %}
+						<textarea name="comment" rows="4" cols="50" placeholder="Write a comment..."></textarea><br><br>
+						<button type="submit" name="comment-submit" class="btn btn-primary">Submit</button>
+						<input type="hidden" name="blog_idd" value="{{blog_desc.Id}}"/>
+					</form>
+				</div>
+			</div>
+	
+				{% if comments %} 
+					 
+				<div class="row">
+                	<div class="col-md-8 comment-col">
+                  		<div class="page-header">
+                    		<h1><small class="pull-right">{{ total_comments.total_comments }}</small> Comments </h1>
+                  		</div> 
+                  		
+			            {% for cmnt in comments %}
+                        <div class="comments-list">
+
+                            <div class="media-body" data-idd="like_{{cmnt.Id}}"> 
+                                <!-- displaying fresh comments -->
+                                <h4 class="media-heading user_name">User</h4> 
+                                <span> {{ cmnt.root_comment }} </span>
+                                <hr>
+                           		<p>
+                           			<small>
+                           				<i class="fa fa-thumbs-up" style="color:#B2B7B7" aria-hidden="true"></i>&nbsp;
+                           				<a href="javascript:void(0)" class="like-link" data-idd="comment-like_{{cmnt.Id}}" href-idd="like_{{cmnt.Id}}" style="color: black;">Like</a>
+                           				<i class="fa fa-comments" aria-hidden="true" style="color:#B2B7B7"></i>&nbsp;
+                           				<a href="javascript:void(0)" style="color:black;" name="div_{{forloop.counter}}" onclick="appendRow(name)">Comment</a>
+                           				<i class="fa fa-thumbs-o-up" style="font-size:13px"></i>&nbsp;
+                           				<a href="#" id="like_{{cmnt.Id}}" data-value="{{cmnt.likes}}"></a>
+                           			</small>
+                           		</p>
+                           		<hr>
+                                
+                                    <!-- input-for reply comment with parent id -->
+                                <form action="{% url 'comment-save'%}" method="POST" id="div_{{forloop.counter}}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="blog_idd" value="{{blog_desc.Id}}"/>
+                                    <input type="hidden" name="parent_id" id="comment-like_{{cmnt.Id}}" value="{{cmnt.Id}}"/>
+                                </form> 
+                            </div>
+
+                            
+                            {% for data in cmnt.children %}
+                         	
+                            <div class="reply-body" id="{{ data.depth }}" data-idd="like_{{data.Id}}"> 
+                              <!-- displaying child and sub-child comments --> 
+                            	<span> {{ data.child_comment }} </span> 
+								<p>
+									<small>
+										<a href="javascript:void(0)" class="like-link" data-idd="reply-like_{{data.Id}}"  href-idd="like_{{data.Id}}" style="color: black;">Like</a> &nbsp;&nbsp;
+										<a href="javascript:void(0)" style="color:black;" name="div-{{data.Id}}" onclick="appendRow(name)">Reply</a>&nbsp; &nbsp;
+										<i class="fa fa-thumbs-o-up" style="font-size:13px"></i>&nbsp;
+										<a href="#" class="likes" id="like_{{data.Id}}" data-value="{{data.likes}}"></a>
+									</small>
+								</p>
+                               <!-- input-for reply comment with parent id -->
+                                <form action="{% url 'comment-save'%}" method="POST" id="div-{{data.Id}}">
+                                {% csrf_token %}
+                                <input type="hidden" name="blog_idd" value="{{blog_desc.Id}}"/>
+                                <input type="hidden" name="parent_id" id="reply-like_{{data.Id}}" value="{{data.Id}}"/>
+                            	</form> 
+                            </div>
+                                 
+                             	{% endfor %}
+                           
+                           
+			       		</div>
+			       		{% endfor %}
+			       		
+			   		</div>
+			   	</div>
+		           
+		        {% endif %}
+    
+			{% endif %}
+
+
+		{% if archive_data %}
+		
+			<div class="row">
+				<div class ="col-lg-12 archive-content">
+					<h1> Blog Archive </h1>
+						{% for entry in archive_data %}
+						{% for year_key,value in entry.items %}
+						<ul>
+						<li>
+							<p>
+								<a href="/archive_year/?year={{ year_key}}" style="color: #398ad5; text-decoration: underline;">{{ year_key }}</a>
+							</p>
+
+				{% for month_key,counter_value in value.items %}
+				
+				<ul> <li>	
+					<a href="/archive_month/?year={{ year_key }}&month={{ month_key }}" style="color: #398ad5; text-decoration: underline;">{{ month_key }}</a>—{% if counter_value > 1 %}{{ counter_value }} entries {% else %} {{ counter_value }} entry {% endif %} 
+					</li>	
+					</ul>	
+				{% endfor %}
+			</li></ul>
+				{% endfor %}
+				{% endfor %}
+						
+							
+				</div>
+			</div>	
+		{% endif %}
+	
+		{% if archive_year %}
+
+		<div class="row">
+				<div class ="col-lg-12 archive-content">
+					
+						{% for entry in archive_year %}
+						{% for year_key,value in entry.items %}
+						<h1> Blog <a href="/archive/" style="color: #398ad5;">Archive </a> for {{ year_key }}</h1>
+						{% for month_key,counter_value in value.items %}
+				
+				<ul style="margin-bottom: 1;"><li>	
+					<a href="/archive_month/?year={{ year_key }}&month={{ month_key }}" style="color: #398ad5; text-decoration: underline;">{{ month_key }}</a>—{% if counter_value > 1 %}{{ counter_value }} entries {% else %} {{ counter_value }} entry {% endif %} 
+					</li>	
+					</ul>	
+				{% endfor %}
+				{% endfor %}
+				{% endfor %}
+						
+							
+				</div>
+		</div>	
+		{% endif %}
+
+	{% if archive_month %}
+
+		<div class="row">
+				<div class ="col-lg-12 archive-content">
+						<h1> Blog <a href="/archive/" style="color: #398ad5;">Archive </a> for {{month}}, {{year}}</h1>
+						{% for entry in archive_month %}
+				<ul style="margin-bottom: 1;"><li>	
+					<a href="/blog_description?id={{entry.Id}}/" style="color: #398ad5; text-decoration: underline;">{{ entry.title }}</a>,{{ entry.created_at }} 
+					</li>	
+					</ul>	
+				{% endfor %}
+				
+				
+						
+							
+				</div>
+		</div>	
+		{% endif %}
+
+	{% if about_title %}
+	<div class="row about-page-row">
+		<div class ="col-lg-12 about-page">
+			<h1 class="title">{{ about_title }}</h1>
+			<p>My name is Armin Ronacher and I'm a passionate developer interested in web
+				development, graphics, realtime rendering and tons of other stuff.  I am
+				one of the founding members of the <a class="reference external" href="http://pocoo.org">Pocoo Team</a> and
+				lead developer on a couple of popular Python projects.</p>
+
+			<p>I'm currently located in Austria and working as a partner for <a class="reference external" href="http://www.getsentry.com/">Sentry</a> and as an advisor for <a class="reference external" href="http://fireteam.net">Fireteam Ltd.</a>.  I'm available for on-site teaching,
+			presentations and certain types of short term contract work.  Aside from
+			that I do <a class="reference external" href="/projects/">open source</a> development and like <a class="reference external" href="/talks">giving talks</a> at various conferences.</p>
+
+			<p>If you want to contact me, you can reach me via one of the following
+			communication channels:</p>
+
+			<ul class="simple">
+				<li>via <a class="reference external" href="mailto:armin.ronacher@active-4.com">email</a></li>
+				<li>send me a message on <a class="reference external" href="http://github.com/mitsuhiko">github</a> or
+				<a class="reference external" href="http://bitbucket.org/mitsuhiko">bitbucket</a></li>
+				<li>reach out to me on <a class="reference external" href="http://twitter.com/mitsuhiko">twitter</a></li>
+				<li>or go to the <tt class="docutils literal">#pocoo</tt> irc channel on freenode</li>
+			</ul>
+
+			<p>My usual nickname is <cite>mitsuhiko</cite>.</p>
+
+			<div class="section" id="like-my-work">
+				<h2>Like my Work?</h2>
+				<p>All of the open source stuff I work on is BSD licensed which
+				means you can do with it whatever you want.</p>
+				<p>I'm currently not accepting donations but if you have some truly
+				interesting problems in your company that you think I might be interested
+				in solving, fire me a mail at <a class="reference external" href="mailto:armin@ronacher.eu">armin@ronacher.eu</a>
+				and maybe we can work together.</p>
+			</div>
+
+			<div class="section" id="about-this-website">
+				<h2>About this Website</h2>
+				<p>The name of this website came when a friend of mine and me were joking
+				about what makes a great web 2.0 website.  We came up with three things: it
+				has to have round corners, fresh colors and a weirdly shortened name.  So
+				the first version of this blog was green, named after a fresh fruit
+				(lucuma) and with a destroyed, abbreviated name.  Not much is left from
+				these days, but the name stuck.</p>
+				<p>The website itself is written in restructured text and built with a small
+				script.  Sourcecode can be <a class="reference external" href="http://github.com/mitsuhiko/lucumr">found on github</a>.</p>
+			</div>
+
+			<div class="section" id="imprint">
+				<h2>Imprint</h2>
+				<p>Imprint and contact information:</p>
+				<div class="line-block">
+					<div class="line">Armin Ronacher</div>
+					<div class="line">Khünburg, 86; 9620 Hermagor; Austria</div>
+					<div class="line">VAT number / UID: AT U68598289</div>
+					<div class="line">Contact e-mail: <a class="reference external" href="mailto:armin.ronacher@active-4.com">armin.ronacher@active-4.com</a></div>
+				</div>
+			</div>
+		</div>
+	</div>	
+		{% endif %}
+
+
+	{% if tags %}
+
+		<div class="row">
+			<div class ="col-lg-12 blog-tags">
+				<h1 id="a"> Tags </h1>
+		
+				<ul class="tagcloud">
+					{% for tag in tags %}
+					<input type="hidden" id="count_{{forloop.counter}}" value="{{tag.counter}}"/>
+					<li><a href="/tags_link/?tagname={{tag.tag}}" style="color: #398ad5; text-decoration: underline;" id="tag_{{tag.tag}}" name="count_{{forloop.counter}}">{{ tag.tag }}</a></li>
+					{% endfor %}	
+				</ul>				
+			</div>
+		</div>	
+	{% endif %}
+
+	{% if tags_info %}
+
+		<div class="row">
+				<div class ="col-lg-12 archive-content">
+						<h1> Entries <a href="/tags/" style="color: #398ad5;">tagged </a>"{{tagname}}"</h1>
+						{% for info in tags_info %}
+				<ul style="margin-bottom: 1;"><li>	
+					<a href="/blog_description?id={{info.Id}}/" style="color: #398ad5; text-decoration: underline;">{{ info.title }}</a>,written on {{ info.created_at }} 
+					</li>	
+					</ul>	
+				{% endfor %}
+				
+				
+						
+							
+				</div>
+		</div>	
+		{% endif %}
+
+		{% include "footer.html" %}	
+		</div>
+		<script>
+			
+		
+	$(document).ready(function(){
+		var value =[]
+		var i=0;
+
+		$('.tagcloud input').each(function(){
+		counter=$(this).val()
+		value.push(counter)
+		});
+
+		$('.tagcloud a').each(function(){
+		fontSize=15+parseInt(value[i])+"px";
+		i++;
+		tag=$(this).text();
+		$(this).css({"font-size":fontSize});	
+		});
+
+		$('.reply-body').each(function(){
+			depth=$(this).attr('id')
+			depth=parseInt(depth)
+			depth=depth+0+'em'
+			console.log('depth',depth)
+			$(this).css({"margin-left":depth})
+			Id=$(this).attr('data-idd')
+			like_value=$("#"+Id).attr('data-value')
+			$('#'+Id).html(like_value); 
+		}); 
+
+		$('.media-body').each(function(){
+			Id=$(this).attr('data-idd')
+			like_value=$("#"+Id).attr('data-value')
+			$('#'+Id).html(like_value); 
+
+		}); 
+
+		$('.like-link').click(function(e1) {
+		e1.preventDefault();
+		var id = $(this).attr("data-idd");
+		var comment_id = $("#"+id).val()
+		var like_id = $(this).attr("href-idd");
+		var like_value = $("#"+like_id).attr("data-value");
+		// console.log('like',like_value)
+		like_value=parseInt(like_value)+1;
+
+		$('#'+like_id).html(like_value); 
+		 $('#'+like_id).attr("data-value",like_value);
+		
+		$.ajax({
+				"url": "{% url 'comment_count_likes' %}",
+				"dataType": "json",
+				data: 
+				{ 
+				  'Id' : comment_id
+				}
+				
+		});
+		});
+
+		});  
+
+$("#like").click(function(e) {
+e.preventDefault();
+var blog_id = $("#blog_id").val()
+$.ajax({
+			"url": "{% url 'count_likes' %}",
+			"dataType": "json",
+			data: 
+			{ 
+			  'Id' : blog_id
+			},
+			success: {}
+	});
+	});
+
+		
+</script>
+	</body>
+</html>
